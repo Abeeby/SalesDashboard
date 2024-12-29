@@ -8,8 +8,7 @@ import {
   Typography,
   Grid,
   Chip,
-  Button,
-  Paper
+  Button
 } from '@mui/material';
 import {
   Close as CloseIcon,
