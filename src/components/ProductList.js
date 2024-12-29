@@ -18,7 +18,9 @@ import {
   Select,
   MenuItem,
   Grid,
-  Stack
+  Stack,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
@@ -29,6 +31,10 @@ import HistoryIcon from '@mui/icons-material/History';
 import PriceHistory from './PriceHistory';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import GalleryView from './GalleryView';
+import { importFromExcel } from '../utils/importUtils';
+import UploadIcon from '@mui/icons-material/Upload';
+import { validateExcelData, generateExcelTemplate } from '../utils/importUtils';
+import ImportPreview from './ImportPreview';
 
 const getStatusColor = (status) => {
   const colors = {
@@ -51,6 +57,14 @@ const ProductList = ({ products, setProducts }) => {
   const [showPriceHistory, setShowPriceHistory] = useState(false);
   const [selectedPriceHistory, setSelectedPriceHistory] = useState([]);
   const [showGallery, setShowGallery] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+  const [importData, setImportData] = useState(null);
+  const [importValidation, setImportValidation] = useState(null);
+  const [showImportPreview, setShowImportPreview] = useState(false);
 
   const handleEdit = (product) => {
     setSelectedProduct(product);
@@ -100,6 +114,39 @@ const ProductList = ({ products, setProducts }) => {
     'Casual', 'Formel'
   ];
 
+  const handleImport = async (event) => {
+    const file = event.target.files[0];
+    try {
+      const importedData = await importFromExcel(file);
+      const validation = validateExcelData(importedData);
+      setImportData(importedData);
+      setImportValidation(validation);
+      setShowImportPreview(true);
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: 'Erreur lors de l\'import du fichier',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleConfirmImport = () => {
+    setProducts(prevProducts => {
+      const existingRefs = new Set(prevProducts.map(p => p.reference));
+      const newProducts = importData.filter(p => !existingRefs.has(p.reference));
+      
+      setNotification({
+        open: true,
+        message: `${newProducts.length} articles importés avec succès`,
+        severity: 'success'
+      });
+
+      return [...prevProducts, ...newProducts];
+    });
+    setShowImportPreview(false);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
@@ -124,6 +171,20 @@ const ProductList = ({ products, setProducts }) => {
             Exporter
           </Button>
           <Button
+            variant="outlined"
+            component="label"
+            startIcon={<UploadIcon />}
+            sx={{ mr: 2 }}
+          >
+            Importer Excel
+            <input
+              type="file"
+              hidden
+              accept=".xlsx,.xls"
+              onChange={handleImport}
+            />
+          </Button>
+          <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => {
@@ -132,6 +193,13 @@ const ProductList = ({ products, setProducts }) => {
             }}
           >
             Ajouter un article
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={generateExcelTemplate}
+            sx={{ mr: 2 }}
+          >
+            Télécharger Template
           </Button>
         </Grid>
       </Grid>
@@ -252,6 +320,24 @@ const ProductList = ({ products, setProducts }) => {
         products={products}
         onEdit={handleEdit}
       />
+
+      <ImportPreview
+        open={showImportPreview}
+        onClose={() => setShowImportPreview(false)}
+        data={importData}
+        validation={importValidation}
+        onConfirm={handleConfirmImport}
+      />
+
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      >
+        <Alert severity={notification.severity}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
