@@ -1,42 +1,56 @@
-import React, { useState } from 'react';
-import { Button, Box } from '@mui/material';
+import { useState } from 'react';
+import { imageService } from '../services/imageService';
+import '../styles/ImageUpload.css';
 
-const ImageUpload = ({ onImageUpload }) => {
+export default function ImageUpload({ itemId, onImageUploaded }) {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState(null);
 
-  const handleFileChange = (event) => {
+  const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-        onImageUpload(file);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setUploading(true);
+    setProgress(0);
+
+    try {
+      // Générer la miniature pour l'aperçu
+      const thumbnail = await imageService.generateThumbnail(file);
+      setPreview(URL.createObjectURL(thumbnail));
+
+      // Upload de l'image originale
+      const downloadURL = await imageService.uploadImage(file, itemId);
+      onImageUploaded(downloadURL);
+      setProgress(100);
+    } catch (error) {
+      console.error('Erreur lors de l\'upload:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
-    <Box>
+    <div className="image-upload">
       <input
-        accept="image/*"
-        style={{ display: 'none' }}
-        id="image-upload"
         type="file"
-        onChange={handleFileChange}
+        accept="image/*"
+        onChange={handleImageUpload}
+        disabled={uploading}
       />
-      <label htmlFor="image-upload">
-        <Button variant="contained" component="span">
-          Télécharger une image
-        </Button>
-      </label>
-      {preview && (
-        <Box mt={2}>
-          <img src={preview} alt="Aperçu" style={{ maxWidth: '200px' }} />
-        </Box>
+      {uploading && (
+        <div className="progress-bar">
+          <div 
+            className="progress-fill"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       )}
-    </Box>
+      {preview && (
+        <div className="preview-container">
+          <img src={preview} alt="Aperçu" className="preview-image" />
+        </div>
+      )}
+    </div>
   );
-};
-
-export default ImageUpload; 
+} 

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import AddArticleModal from './AddArticleModal';
 import EditArticleModal from './EditArticleModal';
 import ConfirmDialog from './ConfirmDialog';
+import DashboardStats from './DashboardStats';
+import ExportMenu from './ExportMenu';
+import AdvancedFilters from './AdvancedFilters';
 import { deleteItem, getItems } from '../api/items';
 import '../styles/ProductList.css';
 
@@ -15,14 +18,20 @@ export default function ProductList() {
   const [error, setError] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   const loadProducts = async () => {
     try {
+      setLoading(true);
+      setError('');
       const items = await getItems();
       setProducts(items);
     } catch (error) {
-      console.error('Erreur lors du chargement des articles:', error);
       setError('Erreur lors du chargement des articles');
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,21 +99,22 @@ export default function ProductList() {
 
   return (
     <div className="product-list">
+      <DashboardStats products={products} />
+      
       <div className="controls">
         <div className="search-filter">
+          <button 
+            className="filter-toggle"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? 'Masquer filtres' : 'Afficher filtres'}
+          </button>
           <input
             type="text"
             placeholder="Rechercher..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            <option value="Tous">Toutes les catégories</option>
-            {/* Ajoutez vos catégories ici */}
-          </select>
         </div>
         
         <div className="actions">
@@ -112,56 +122,73 @@ export default function ProductList() {
             {viewMode === 'list' ? 'Vue Galerie' : 'Vue Liste'}
           </button>
           <button onClick={() => setShowModal(true)}>+ Ajouter un Article</button>
-          <button onClick={handleExport}>Exporter</button>
+          <ExportMenu data={filteredProducts} />
         </div>
       </div>
 
-      {viewMode === 'list' ? (
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Prix</th>
-              <th>Status</th>
-              <th>Vues</th>
-              <th>Favoris</th>
-              <th>Date de Vente</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map(product => (
-              <tr key={product.id}>
-                <td>{product.nom}</td>
-                <td>{product.prix}€</td>
-                <td>
-                  <span className={`status ${product.status}`}>
-                    {product.status}
-                  </span>
-                </td>
-                <td>{product.vues}</td>
-                <td>{product.favoris}</td>
-                <td>{product.dateVente}</td>
-                <td>
-                  <button className="edit" onClick={() => handleEdit(product)}>✏️</button>
-                  <button className="delete" onClick={() => setDeleteId(product.id)}>🗑️</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {showFilters && (
+        <AdvancedFilters 
+          onFilterChange={(filters) => {
+            // Appliquer les filtres avancés ici
+            console.log('Filtres:', filters);
+          }} 
+        />
+      )}
+
+      {loading ? (
+        <div className="loading-message">Chargement des articles...</div>
+      ) : error ? (
+        <div className="error-message">{error}</div>
+      ) : products.length === 0 ? (
+        <div className="empty-message">Aucun article trouvé</div>
       ) : (
-        <div className="gallery-view">
-          {filteredProducts.map(product => (
-            <div key={product.id} className="product-card">
-              <div className="product-info">
-                <h3>{product.nom}</h3>
-                <p className="price">{product.prix}€</p>
-                <p className="status">{product.status}</p>
+        viewMode === 'list' ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Prix</th>
+                <th>Status</th>
+                <th>Vues</th>
+                <th>Favoris</th>
+                <th>Date de Vente</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map(product => (
+                <tr key={product.id}>
+                  <td>{product.nom}</td>
+                  <td>{product.prix}€</td>
+                  <td>
+                    <span className={`status ${product.status}`}>
+                      {product.status}
+                    </span>
+                  </td>
+                  <td>{product.vues}</td>
+                  <td>{product.favoris}</td>
+                  <td>{product.dateVente}</td>
+                  <td>
+                    <button className="edit" onClick={() => handleEdit(product)}>✏️</button>
+                    <button className="delete" onClick={() => setDeleteId(product.id)}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="gallery-view">
+            {filteredProducts.map(product => (
+              <div key={product.id} className="product-card">
+                <div className="product-info">
+                  <h3>{product.nom}</h3>
+                  <p className="price">{product.prix}€</p>
+                  <p className="status">{product.status}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
       )}
 
       {showModal && (
@@ -192,8 +219,6 @@ export default function ProductList() {
           {successMessage}
         </div>
       )}
-
-      {error && <div className="error-message">{error}</div>}
     </div>
   );
 } 

@@ -1,5 +1,6 @@
-import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth } from '../auth/firebase';
+import { imageService } from '../services/imageService';
 
 // Ajouter un item
 export const addItem = async (itemData) => {
@@ -13,15 +14,15 @@ export const addItem = async (itemData) => {
     const formattedData = {
       ...itemData,
       userId: auth.currentUser.uid,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       status: itemData.status || 'disponible',
       vues: 0,
       favoris: 0,
       prix: parseFloat(itemData.prix) || 0,
       categories: Array.isArray(itemData.categories) 
         ? itemData.categories 
-        : itemData.categories.split(',').map(c => c.trim()),
+        : itemData.categories.split(',').map(c => c.trim()).filter(Boolean),
     };
 
     // Validation des données requises
@@ -41,7 +42,7 @@ export const addItem = async (itemData) => {
     };
   } catch (error) {
     console.error('Erreur lors de l\'ajout:', error);
-    throw new Error(error.message || 'Erreur lors de l\'ajout de l\'article');
+    throw error;
   }
 };
 
@@ -65,14 +66,28 @@ export const getItems = async () => {
     }));
   } catch (error) {
     console.error('Erreur lors de la récupération:', error);
-    throw error;
+    return [];
   }
 };
 
 export const deleteItem = async (itemId) => {
   const db = getFirestore();
   try {
-    await deleteDoc(doc(db, 'items', itemId));
+    // Récupérer d'abord l'article pour avoir l'URL de l'image
+    const itemRef = doc(db, 'items', itemId);
+    const itemSnap = await getDoc(itemRef);
+    
+    if (itemSnap.exists()) {
+      const itemData = itemSnap.data();
+      
+      // Supprimer l'image si elle existe
+      if (itemData.imageUrl) {
+        await imageService.deleteImage(itemData.imageUrl);
+      }
+      
+      // Supprimer l'article
+      await deleteDoc(itemRef);
+    }
   } catch (error) {
     console.error('Erreur lors de la suppression:', error);
     throw error;
@@ -83,6 +98,18 @@ export const updateItem = async (itemId, itemData) => {
   const db = getFirestore();
   try {
     const itemRef = doc(db, 'items', itemId);
+    const oldItemSnap = await getDoc(itemRef);
+    
+    if (oldItemSnap.exists()) {
+      const oldItemData = oldItemSnap.data();
+      
+      // Si une nouvelle image est fournie et qu'il y avait une ancienne image
+      if (itemData.imageUrl && oldItemData.imageUrl && itemData.imageUrl !== oldItemData.imageUrl) {
+        // Supprimer l'ancienne image
+        await imageService.deleteImage(oldItemData.imageUrl);
+      }
+    }
+    
     await updateDoc(itemRef, {
       ...itemData,
       updatedAt: new Date(),

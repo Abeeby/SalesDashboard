@@ -5,8 +5,17 @@ rules_version = '2';
 //    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    match /items/{itemId}/{fileName} {
+      // Autoriser la lecture si l'utilisateur est connecté
+      allow read: if request.auth != null;
+      
+      // Autoriser l'upload si l'utilisateur est connecté et que le fichier est une image < 5MB
+      allow create: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      
+      // Autoriser la suppression si l'utilisateur est connecté
+      allow delete: if request.auth != null;
     }
   }
 }

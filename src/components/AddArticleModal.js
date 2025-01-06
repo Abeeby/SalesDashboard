@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { addItem } from '../api/items';
 import '../styles/AddArticleModal.css';
+import ImageUpload from './ImageUpload';
 
 export default function AddArticleModal({ onClose, onAdd }) {
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,7 @@ export default function AddArticleModal({ onClose, onAdd }) {
     description: '',
     status: 'disponible'
   });
+  const [imageUrl, setImageUrl] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +34,8 @@ export default function AddArticleModal({ onClose, onAdd }) {
       const itemData = {
         ...formData,
         prix: parseFloat(formData.prix),
-        categories: formData.categories.split(',').map(c => c.trim()).filter(c => c),
+        categories: formData.categories.split(',').map(c => c.trim()).filter(Boolean),
+        imageUrl
       };
 
       const newItem = await addItem(itemData);
@@ -111,6 +114,21 @@ export default function AddArticleModal({ onClose, onAdd }) {
               value={formData.description}
               onChange={handleChange}
             />
+          </div>
+
+          <div className="form-group">
+            <label>Image</label>
+            <ImageUpload
+              itemId="temp" // sera remplacé par l'ID réel après création
+              onImageUploaded={(url) => setImageUrl(url)}
+            />
+            {imageUrl && (
+              <img 
+                src={imageUrl} 
+                alt="Aperçu" 
+                className="image-preview"
+              />
+            )}
           </div>
 
           <div className="button-group">
