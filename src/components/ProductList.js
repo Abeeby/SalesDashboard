@@ -7,10 +7,8 @@ import '../styles/ProductList.css';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // 'list' ou 'gallery'
+  const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [deleteId, setDeleteId] = useState(null);
@@ -24,8 +22,7 @@ export default function ProductList() {
       setProducts(items);
     } catch (error) {
       console.error('Erreur lors du chargement des articles:', error);
-    } finally {
-      setLoading(false);
+      setError('Erreur lors du chargement des articles');
     }
   };
 
@@ -33,7 +30,7 @@ export default function ProductList() {
     loadProducts();
   }, []);
 
-  const handleAddProduct = async (newProduct) => {
+  const handleAddProduct = async () => {
     await loadProducts(); // Recharge la liste après l'ajout
   };
 
