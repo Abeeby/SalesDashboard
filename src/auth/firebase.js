@@ -17,6 +17,4 @@ export const db = getFirestore(app);
 
 auth.onAuthStateChanged((user) => {
   console.log('État de l\'authentification:', user ? 'Connecté' : 'Non connecté');
-});
-
-export { auth, db }; 
+}); 
