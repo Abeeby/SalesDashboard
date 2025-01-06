@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from './auth/firebase';
 import Login from './pages/Login';
@@ -27,18 +27,16 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/" /> : <Login />} 
-        />
-        <Route 
-          path="/" 
-          element={user ? <Dashboard /> : <Navigate to="/login" />} 
-        />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route 
+        path="/login" 
+        element={user ? <Navigate to="/" /> : <Login />} 
+      />
+      <Route 
+        path="/" 
+        element={user ? <Dashboard /> : <Navigate to="/login" />} 
+      />
+    </Routes>
   );
 }
 
