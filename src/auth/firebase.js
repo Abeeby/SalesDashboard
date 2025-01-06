@@ -5,7 +5,7 @@ import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBfIsadPOcK1Jp9KVMKAh4q7uS5mTs91s",
+  apiKey: "AIzaSyBfIsadPOoKljp9KVMKAh4q7uS5mTs91s",
   authDomain: "dashboradsales.firebaseapp.com",
   projectId: "dashboradsales",
   storageBucket: "dashboradsales.firebasestorage.app",
@@ -13,11 +13,6 @@ const firebaseConfig = {
   appId: "1:239075945910:web:760a63b2dcdf58629ba517",
   measurementId: "G-15XGJY5KGV"
 };
-
-console.log('Initialisation de Firebase avec config:', {
-  ...firebaseConfig,
-  apiKey: '[MASQUÉ]'
-});
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
