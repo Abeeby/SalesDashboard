@@ -5,7 +5,7 @@ import { auth } from '../auth/firebase';
 export const createTeam = async (teamName) => {
   const db = getFirestore();
   try {
-    const teamRef = await addDoc(collection(db, 'teams'), {
+    const docRef = await addDoc(collection(db, 'teams'), {
       name: teamName,
       ownerId: auth.currentUser.uid,
       members: [{
@@ -15,7 +15,7 @@ export const createTeam = async (teamName) => {
       }],
       createdAt: new Date()
     });
-    return teamRef.id;
+    return docRef.id;
   } catch (error) {
     console.error('Erreur lors de la création de l\'équipe:', error);
     throw error;
@@ -26,7 +26,6 @@ export const createTeam = async (teamName) => {
 export const inviteMember = async (teamId, email) => {
   const db = getFirestore();
   try {
-    const teamRef = doc(db, 'teams', teamId);
     await addDoc(collection(db, 'invitations'), {
       teamId,
       email,
