@@ -13,12 +13,17 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Tentative de connexion avec:', { email }); // Debug
+      console.log('Configuration Firebase:', auth?.app?.options); // Pour déboguer
+      console.log('Tentative de connexion avec:', { email });
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Connexion réussie:', userCredential.user); // Debug
+      console.log('Connexion réussie:', userCredential.user);
       navigate('/');
     } catch (error) {
-      console.error('Erreur de connexion:', error); // Debug
+      console.error('Erreur détaillée:', {
+        code: error.code,
+        message: error.message,
+        fullError: error
+      });
       setError(error.message);
     }
   };

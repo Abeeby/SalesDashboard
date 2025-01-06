@@ -7,7 +7,6 @@ import { getAnalytics } from 'firebase/analytics';
 const firebaseConfig = {
   apiKey: "AIzaSyBfIsadPOcK1Jp9KVMKAh4q7uS5mTs91s",
   authDomain: "dashboradsales.firebaseapp.com",
-  databaseURL: "https://dashboradsales-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "dashboradsales",
   storageBucket: "dashboradsales.firebasestorage.app",
   messagingSenderId: "239075945910",
@@ -15,27 +14,15 @@ const firebaseConfig = {
   measurementId: "G-15XGJY5KGV"
 };
 
-let auth, db, storage, analytics;
+console.log('Initialisation de Firebase avec config:', {
+  ...firebaseConfig,
+  apiKey: '[MASQUÉ]'
+});
 
-try {
-  const app = initializeApp(firebaseConfig);
-  console.log('Firebase initialisé avec succès');
-  
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-  analytics = getAnalytics(app);
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log('Utilisateur connecté:', user.email);
-    } else {
-      console.log('Utilisateur non connecté');
-    }
-  });
-} catch (error) {
-  console.error('Erreur d\'initialisation Firebase:', error);
-  throw error;
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const analytics = getAnalytics(app);
 
 export { auth, db, storage, analytics }; 
