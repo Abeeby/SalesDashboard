@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useFormValidation } from '../hooks/useFormValidation';
 
-export function Login() {
+export default function Login() {
   const {
     values,
     errors,
