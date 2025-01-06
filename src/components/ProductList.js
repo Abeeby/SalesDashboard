@@ -13,7 +13,6 @@ export default function ProductList() {
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [deleteId, setDeleteId] = useState(null);
   const [error, setError] = useState('');
   const [editingItem, setEditingItem] = useState(null);
@@ -46,32 +45,8 @@ export default function ProductList() {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.marque.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'Tous' || 
-                           product.categories.includes(selectedCategory);
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
-
-  const handleExport = () => {
-    const csv = [
-      ['Nom', 'Prix', 'Status', 'Marque', 'Catégories', 'Description', 'Date de Vente'],
-      ...filteredProducts.map(p => [
-        p.nom,
-        p.prix,
-        p.status,
-        p.marque,
-        p.categories.join(', '),
-        p.description,
-        p.dateVente
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'articles.csv';
-    a.click();
-  };
 
   const handleDelete = async (id) => {
     try {
