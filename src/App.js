@@ -1,45 +1,31 @@
-import React from 'react';
-import { Box, Container } from '@mui/material';
-import ProductList from './components/ProductList.js';
-import Dashboard from './components/Dashboard.js';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { auth } from './auth/firebase';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 
 function App() {
-  const [products, setProducts] = React.useState([
-    {
-      id: 1,
-      nom: "T-shirt Palace",
-      prix: 25.00,
-      status: "vendu",
-      vues: 35,
-      favoris: 5,
-      dateVente: "2024-02-25",
-      marque: "Palace",
-      categories: ["Streetwear", "Haut"],
-      description: "T-shirt Palace condition 9/10",
-      plateforme: "vinted"
-    },
-    {
-      id: 2,
-      nom: "Pull Lacoste",
-      prix: 30.00,
-      status: "en_attente",
-      vues: 88,
-      favoris: 6,
-      dateVente: null,
-      marque: "Lacoste",
-      categories: ["Casual", "Haut"],
-      description: "Pull Lacoste vintage",
-      plateforme: "vinted"
-    }
-  ]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) return <div>Chargement...</div>;
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ my: 4 }}>
-        <Dashboard products={products} />
-        <ProductList products={products} setProducts={setProducts} />
-      </Box>
-    </Container>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+        <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
