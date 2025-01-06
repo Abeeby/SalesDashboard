@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AddArticleModal from './AddArticleModal';
 import EditArticleModal from './EditArticleModal';
 import ConfirmDialog from './ConfirmDialog';
-import { deleteItem } from '../api/items';
+import { deleteItem, getItems } from '../api/items';
 import '../styles/ProductList.css';
 
-export default function ProductList({ products, setProducts }) {
+export default function ProductList() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' ou 'gallery'
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +17,25 @@ export default function ProductList({ products, setProducts }) {
   const [error, setError] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+
+  const loadProducts = async () => {
+    try {
+      const items = await getItems();
+      setProducts(items);
+    } catch (error) {
+      console.error('Erreur lors du chargement des articles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const handleAddProduct = async (newProduct) => {
+    await loadProducts(); // Recharge la liste après l'ajout
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,10 +170,7 @@ export default function ProductList({ products, setProducts }) {
       {showModal && (
         <AddArticleModal
           onClose={() => setShowModal(false)}
-          onAdd={() => {
-            // Rafraîchir la liste après l'ajout
-            // Vous devrez implémenter cette logique
-          }}
+          onAdd={handleAddProduct}
         />
       )}
 

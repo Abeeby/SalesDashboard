@@ -5,13 +5,23 @@ import { auth } from '../auth/firebase';
 export const addItem = async (itemData) => {
   const db = getFirestore();
   try {
-    await addDoc(collection(db, 'items'), {
+    if (!auth.currentUser) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    const docRef = await addDoc(collection(db, 'items'), {
       ...itemData,
       userId: auth.currentUser.uid,
-      createdAt: new Date()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
+
+    return {
+      id: docRef.id,
+      ...itemData
+    };
   } catch (error) {
-    console.error('Erreur lors de l\'ajout de l\'item:', error);
+    console.error('Erreur lors de l\'ajout:', error);
     throw error;
   }
 };
@@ -20,17 +30,22 @@ export const addItem = async (itemData) => {
 export const getItems = async () => {
   const db = getFirestore();
   try {
+    if (!auth.currentUser) {
+      throw new Error('Utilisateur non connecté');
+    }
+
     const q = query(
       collection(db, 'items'),
       where('userId', '==', auth.currentUser.uid)
     );
+    
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
   } catch (error) {
-    console.error('Erreur lors de la récupération des items:', error);
+    console.error('Erreur lors de la récupération:', error);
     throw error;
   }
 };

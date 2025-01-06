@@ -11,14 +11,9 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
-console.log('Firebase Config:', {
-  ...firebaseConfig,
-  apiKey: firebaseConfig.apiKey ? 'présent' : 'manquant'
-});
-
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 auth.onAuthStateChanged((user) => {
   console.log('État de l\'authentification:', user ? 'Connecté' : 'Non connecté');
