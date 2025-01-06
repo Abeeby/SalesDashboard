@@ -1,4 +1,4 @@
-import { getFirestore, collection, addDoc, query, where, getDocs, doc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { auth } from '../auth/firebase';
 
 // Créer une équipe
