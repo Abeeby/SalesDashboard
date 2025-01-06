@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from './auth/firebase';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -17,15 +18,27 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div>Chargement...</div>;
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route 
+          path="/login" 
+          element={user ? <Navigate to="/" /> : <Login />} 
+        />
+        <Route 
+          path="/" 
+          element={user ? <Dashboard /> : <Navigate to="/login" />} 
+        />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
