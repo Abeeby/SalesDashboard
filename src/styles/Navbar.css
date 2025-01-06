@@ -1,0 +1,30 @@
+.MuiAppBar-root {
+  background: linear-gradient(45deg, #2E7D32 30%, #4CAF50 90%) !important;
+  box-shadow: 0 3px 5px 2px rgba(46, 125, 50, .3) !important;
+}
+
+.MuiButton-root {
+  text-transform: none !important;
+  border-radius: 20px !important;
+  padding: 6px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-startIcon {
+  margin-right: 4px !important;
+}
+
+.MuiIconButton-root {
+  border-radius: 12px !important;
+}
+
+.MuiMenu-paper {
+  margin-top: 8px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2) !important;
+}
+
+.MuiMenuItem-root {
+  padding: 12px 24px !important;
+  font-size: 0.9rem !important;
+} 
