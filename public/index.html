@@ -2,14 +2,31 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Zandishop Dashboard - Gestion Vinted" />
-    <title>Zandishop Dashboard</title>
+    <meta name="theme-color" content="#4CAF50" />
+    <meta name="google-site-verification" content="%REACT_APP_GOOGLE_SITE_VERIFICATION%" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https://www.vinted.fr https://*.vinted.net;
+      img-src 'self' https://*.vinted.net data: blob:;
+      connect-src 'self' https://www.vinted.fr https://*.vinted.net;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      style-src 'self' 'unsafe-inline';
+    ">
+    <meta
+      name="description"
+      content="Dashboard de ventes Vinted"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Dashboard Vinted</title>
+    <script>
+      // Configurer le domaine pour les cookies
+      document.domain = 'dashboradsales.web.app';
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <div id="tsparticles"></div>
   </body>
 </html>

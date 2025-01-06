@@ -40,6 +40,8 @@ jobs:
           echo "REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}" >> .env
           echo "REACT_APP_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}" >> .env
           echo "REACT_APP_FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}" >> .env
+          echo "REACT_APP_VINTED_API_URL=https://www.vinted.fr/api/v2" >> .env
+          echo "REACT_APP_ENABLE_LOGS=false" >> .env
 
       - name: Build
         run: npm run build
@@ -47,6 +49,7 @@ jobs:
           CI: true
           ESLINT_NO_DEV_ERRORS: true
           PUBLIC_URL: https://dashboradsales.web.app
+          GENERATE_SOURCEMAP: false
         
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
