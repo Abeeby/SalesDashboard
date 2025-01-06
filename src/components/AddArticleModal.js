@@ -11,9 +11,7 @@ export default function AddArticleModal({ onClose, onAdd }) {
     marque: '',
     categories: '',
     description: '',
-    status: 'disponible',
-    vues: 0,
-    favoris: 0
+    status: 'disponible'
   });
 
   const handleSubmit = async (e) => {
@@ -22,23 +20,38 @@ export default function AddArticleModal({ onClose, onAdd }) {
     setError('');
 
     try {
+      // Validation basique
+      if (!formData.nom.trim()) {
+        throw new Error('Le nom est requis');
+      }
+
+      if (!formData.prix || parseFloat(formData.prix) <= 0) {
+        throw new Error('Le prix doit être supérieur à 0');
+      }
+
       const itemData = {
         ...formData,
         prix: parseFloat(formData.prix),
-        categories: formData.categories.split(',').map(c => c.trim()),
-        dateCreation: new Date().toISOString(),
-        dateModification: new Date().toISOString()
+        categories: formData.categories.split(',').map(c => c.trim()).filter(c => c),
       };
 
-      await addItem(itemData);
-      onAdd && onAdd(itemData);
+      const newItem = await addItem(itemData);
+      onAdd && onAdd(newItem);
       onClose();
     } catch (error) {
       console.error('Erreur lors de l\'ajout:', error);
-      setError('Erreur lors de l\'ajout de l\'article');
+      setError(error.message || 'Erreur lors de l\'ajout de l\'article');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -51,8 +64,9 @@ export default function AddArticleModal({ onClose, onAdd }) {
             <label>Nom</label>
             <input
               type="text"
+              name="nom"
               value={formData.nom}
-              onChange={(e) => setFormData({...formData, nom: e.target.value})}
+              onChange={handleChange}
               required
             />
           </div>
@@ -61,10 +75,12 @@ export default function AddArticleModal({ onClose, onAdd }) {
             <label>Prix</label>
             <input
               type="number"
+              name="prix"
               step="0.01"
               value={formData.prix}
-              onChange={(e) => setFormData({...formData, prix: e.target.value})}
+              onChange={handleChange}
               required
+              min="0.01"
             />
           </div>
 
@@ -72,8 +88,9 @@ export default function AddArticleModal({ onClose, onAdd }) {
             <label>Marque</label>
             <input
               type="text"
+              name="marque"
               value={formData.marque}
-              onChange={(e) => setFormData({...formData, marque: e.target.value})}
+              onChange={handleChange}
             />
           </div>
 
@@ -81,16 +98,18 @@ export default function AddArticleModal({ onClose, onAdd }) {
             <label>Catégories (séparées par des virgules)</label>
             <input
               type="text"
+              name="categories"
               value={formData.categories}
-              onChange={(e) => setFormData({...formData, categories: e.target.value})}
+              onChange={handleChange}
             />
           </div>
 
           <div className="form-group">
             <label>Description</label>
             <textarea
+              name="description"
               value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              onChange={handleChange}
             />
           </div>
 

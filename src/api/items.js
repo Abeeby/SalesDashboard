@@ -9,20 +9,39 @@ export const addItem = async (itemData) => {
       throw new Error('Utilisateur non connecté');
     }
 
-    const docRef = await addDoc(collection(db, 'items'), {
+    // Formatage des données avant l'ajout
+    const formattedData = {
       ...itemData,
       userId: auth.currentUser.uid,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      updatedAt: new Date().toISOString(),
+      status: itemData.status || 'disponible',
+      vues: 0,
+      favoris: 0,
+      prix: parseFloat(itemData.prix) || 0,
+      categories: Array.isArray(itemData.categories) 
+        ? itemData.categories 
+        : itemData.categories.split(',').map(c => c.trim()),
+    };
+
+    // Validation des données requises
+    if (!formattedData.nom || formattedData.nom.trim() === '') {
+      throw new Error('Le nom est requis');
+    }
+
+    if (formattedData.prix <= 0) {
+      throw new Error('Le prix doit être supérieur à 0');
+    }
+
+    const docRef = await addDoc(collection(db, 'items'), formattedData);
 
     return {
       id: docRef.id,
-      ...itemData
+      ...formattedData
     };
   } catch (error) {
     console.error('Erreur lors de l\'ajout:', error);
-    throw error;
+    throw new Error(error.message || 'Erreur lors de l\'ajout de l\'article');
   }
 };
 
