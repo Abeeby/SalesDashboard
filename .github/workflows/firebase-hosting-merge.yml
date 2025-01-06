@@ -43,6 +43,10 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          CI: true
+          ESLINT_NO_DEV_ERRORS: true
+          PUBLIC_URL: https://dashboradsales.web.app
         
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
