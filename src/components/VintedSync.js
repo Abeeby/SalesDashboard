@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { syncVintedAccount, getVintedItems } from '../api/vinted';
+import { addVintedAccount } from '../api/teams';
 import '../styles/VintedSync.css';
 
 export default function VintedSync() {
@@ -7,18 +7,19 @@ export default function VintedSync() {
   const [vintedUsername, setVintedUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleVintedSync = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
-      const result = await syncVintedAccount(vintedEmail);
-      if (result.success) {
-        const items = await getVintedItems();
-        console.log('Articles récupérés:', items);
-      }
+      await addVintedAccount('default', vintedEmail, vintedUsername);
+      setSuccess('Compte Vinted synchronisé avec succès !');
+      setVintedEmail('');
+      setVintedUsername('');
     } catch (error) {
       setError('Erreur lors de la synchronisation avec Vinted');
       console.error(error);
@@ -31,6 +32,7 @@ export default function VintedSync() {
     <div className="vinted-sync">
       <h2>Synchronisation Vinted</h2>
       {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
       
       <form onSubmit={handleVintedSync}>
         <div className="input-group">
