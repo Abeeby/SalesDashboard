@@ -5,8 +5,9 @@ import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBfIsadPOoKljp9KVMKAh4q7uS5mTs91s",
+  apiKey: "AIzaSyBfIsadPOoKljp9KVMKAh4gq7uS5mTs9ls",
   authDomain: "dashboradsales.firebaseapp.com",
+  databaseURL: "https://dashboradsales-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "dashboradsales",
   storageBucket: "dashboradsales.firebasestorage.app",
   messagingSenderId: "239075945910",
