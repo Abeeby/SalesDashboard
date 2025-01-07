@@ -1,45 +1,119 @@
-const puppeteer = require('puppeteer');
+const fetch = require('node-fetch');
 const { saveCookies, loadCookies } = require('./cookies');
 
-const VINTED_COOKIES = {
-  anon_id: "435b3e2d-cc91-4b90-8282-2a74ed245632",
-  v_uid: "117458538",
-  access_token_web: "eyJraWQiOiJFNTdZZHJ1SHBsQWp1MmNObzFEb3JIM2oyN0J1NS1zX09QNVB3UGlobjVNIiwiYWxnIjoiUFMyNTYifQ.eyJhcHBfaWQiOjQsImNsaWVudF9pZCI6IndlYiIsImF1ZCI6ImZyLmNvcmUuYXBpIiwic3ViIjoxMTc0NTg1MzgsImlhdCI6MTczNjE3NzIyMiwic2lkIjoiZmRkMDdkNjctMTczNjE3NzIyMiIsInNjb3BlIjoidXNlciIsImV4cCI6MTczNjE4NDQyMiwicHVycG9zZSI6ImFjY2VzcyIsImxvZ2luX3R5cGUiOjMsImFjdCI6eyJzdWIiOjExNzQ1ODUzOH0sImFjY291bnRfaWQiOjgyMTY4Mjk4fQ",
-  cf_clearance: "YeLHlO2s7qZ1eaEFdXlpwIyCsudjHZvEixqssX8AbUQ-1736177077-1.2.1.1-5H_.CqxTKph47esU.vkKo6A.B_wWF0T9oebb3XTS8tPrAGe_5vcMPBtm5cT7ld.406GEIFd1vmJ.7w2T_huGje2_wKe3xtvEQ50whf4F6Wz7zkCO7hHU_L1L0s_Y4s4_sG0oRgaDJMEjGhewkfKhMoGfmucOHp68OW9tK4GKMgrf7ddCQRA0JqxoymCQ4DhsHbIMceI5W9wzl.yjjkej359B6jdCYxpe9jY0zvlI.AFoyUFEDbl4jkEBxkqeUZ.ptnYTdMziUGnfY1.u31Q6wacA.W.6Z8NVX39laXPNXuomNqxGH9UXpR6qW_JqfxqlXULc1.SsiE9ynB1dqiwpllacYeF.syiYfQbbPZdS5wk",
-  datadome: "531dI43IufIFYfMQ3EAE6ZZf2My1RiIMaJjMUHO7TW629eIVpJs4oKvwkCCmRNd9rFbPCqhwUUBjESLqePsIXswnFnBDCfoR8neYNy1YYkiyn4N3Pxu6EotDIXY5Ysl3"
-};
+// Configuration de base
+const VINTED_API = 'https://www.vinted.fr/api/v2';
+const USER_ID = process.env.VINTED_USER_ID || '117458538';
 
+// Ajout des headers essentiels de l'API Vinted
 const VINTED_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'Accept-Language': 'en-US,en;q=0.5',
-  'Accept-Encoding': 'gzip, deflate, br, zstd',
-  'Connection': 'keep-alive',
-  'Upgrade-Insecure-Requests': '1',
-  'Sec-Fetch-Dest': 'document',
-  'Sec-Fetch-Mode': 'navigate',
+  'Accept': 'application/json',
+  'Accept-Language': 'fr,fr-FR;q=0.9,en-US;q=0.8,en;q=0.7',
+  'Content-Type': 'application/json',
+  'X-App-Version': '2024.2.0',
+  'Origin': 'https://www.vinted.fr',
+  'Referer': 'https://www.vinted.fr/',
+  'Sec-Fetch-Dest': 'empty',
+  'Sec-Fetch-Mode': 'cors',
   'Sec-Fetch-Site': 'same-origin',
-  'Sec-Fetch-User': '?1'
+  // Ajout des headers de sécurité
+  'X-Requested-With': 'XMLHttpRequest',
+  'DNT': '1',
+  'Connection': 'keep-alive'
 };
 
-async function authenticateVinted() {
-  try {
-    // Convertir les cookies du format HAR en format attendu
-    const cookies = Object.entries(VINTED_COOKIES).map(([name, value]) => ({
-      name,
-      value,
-      domain: '.vinted.fr',
-      path: '/'
-    }));
+let authRetryCount = 0;
+const MAX_RETRIES = 3;
 
-    // Sauvegarder les cookies
-    await saveCookies(cookies);
-    
-    return { success: true, cookies, headers: VINTED_HEADERS };
+async function refreshVintedAuth() {
+  try {
+    // Réinitialiser le compteur de tentatives
+    authRetryCount = 0;
+
+    const response = await fetch(`${VINTED_API}/users/${USER_ID}`, {
+      headers: {
+        ...VINTED_HEADERS,
+        // Ajouter les cookies existants s'il y en a
+        ...(await getExistingCookieHeader())
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erreur de rafraîchissement: ${response.status}`);
+    }
+
+    const cookies = response.headers.raw()['set-cookie'];
+    if (!cookies || cookies.length === 0) {
+      throw new Error('Pas de cookies reçus');
+    }
+
+    const parsedCookies = cookies.map(cookie => {
+      const [nameValue, ...parts] = cookie.split(';');
+      const [name, value] = nameValue.split('=');
+      return { 
+        name, 
+        value, 
+        domain: '.vinted.fr',
+        path: '/',
+        secure: true,
+        sameSite: 'none'
+      };
+    });
+
+    await saveCookies(parsedCookies);
+    console.log('Nouveaux cookies sauvegardés avec succès');
+    return parsedCookies;
+
   } catch (error) {
-    console.error('Erreur d\'authentification:', error);
-    return { success: false, error: error.message };
+    console.error('Erreur de rafraîchissement:', error);
+    return null;
   }
 }
 
-module.exports = { authenticateVinted, VINTED_HEADERS }; 
+async function getExistingCookieHeader() {
+  const cookies = await loadCookies();
+  return cookies ? {
+    'Cookie': cookies.map(c => `${c.name}=${c.value}`).join('; ')
+  } : {};
+}
+
+async function getVintedData() {
+  try {
+    const cookies = await loadCookies();
+    if (!cookies && authRetryCount < MAX_RETRIES) {
+      authRetryCount++;
+      console.log(`Tentative de rafraîchissement ${authRetryCount}/${MAX_RETRIES}`);
+      await refreshVintedAuth();
+      return getVintedData();
+    }
+
+    const response = await fetch(`${VINTED_API}/users/${USER_ID}/items?per_page=100&page=1&order=newest_first`, {
+      headers: {
+        ...VINTED_HEADERS,
+        ...(await getExistingCookieHeader())
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 && authRetryCount < MAX_RETRIES) {
+        authRetryCount++;
+        console.log(`Tentative de rafraîchissement après 401: ${authRetryCount}/${MAX_RETRIES}`);
+        await refreshVintedAuth();
+        return getVintedData();
+      }
+      throw new Error(`Erreur API: ${response.status}`);
+    }
+
+    // Réinitialiser le compteur en cas de succès
+    authRetryCount = 0;
+    return await response.json();
+
+  } catch (error) {
+    console.error('Erreur de récupération des données:', error);
+    throw error;
+  }
+}
+
+module.exports = { getVintedData, refreshVintedAuth }; 
