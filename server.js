@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { authenticateVinted } = require('./auth');
+const { authenticateVinted, VINTED_HEADERS } = require('./auth');
 const { loadCookies } = require('./cookies');
 const fetch = require('node-fetch');
 
@@ -56,8 +56,10 @@ app.use('/api/vinted', async (req, res) => {
     const response = await fetch(`https://www.vinted.fr${req.path}`, {
       method: req.method,
       headers: {
+        ...VINTED_HEADERS,
         'Cookie': cookies.map(c => `${c.name}=${c.value}`).join('; '),
-        ...req.headers
+        'Origin': 'https://www.vinted.fr',
+        'Referer': 'https://www.vinted.fr/'
       }
     });
 
