@@ -1,7 +1,7 @@
 import { getCookie } from '../utils/cookies';
 
 const VINTED_API = 'https://www.vinted.fr/api/v2';
-const LOGIN_URL = 'https://www.vinted.fr/member/login';
+const VINTED_URL = 'https://www.vinted.fr'; // URL principale
 
 export async function authenticateVinted() {
   try {
@@ -17,48 +17,58 @@ export async function authenticateVinted() {
       }
     }
 
-    // Ouvrir la page de connexion dans une nouvelle fenêtre
-    const loginWindow = window.open(LOGIN_URL, 'VintedLogin', 
-      'width=600,height=700,menubar=no,toolbar=no,location=no'
+    // Ouvrir Vinted dans une nouvelle fenêtre
+    const vintedWindow = window.open(VINTED_URL, 'VintedLogin', 
+      'width=1024,height=800,menubar=no,toolbar=no,location=yes'
     );
 
-    if (!loginWindow) {
+    if (!vintedWindow) {
       throw new Error('Le blocage des popups est activé. Veuillez l\'autoriser pour vous connecter.');
     }
 
     return new Promise((resolve) => {
-      // Vérifier périodiquement les cookies
+      let checkCount = 0;
+      const maxChecks = 300; // 5 minutes maximum
+
       const checkAuth = setInterval(async () => {
+        checkCount++;
+        
         try {
+          // Vérifier si l'utilisateur s'est connecté
           const newToken = getCookie('access_token_web');
           const newUserId = getCookie('user_id');
 
           if (newToken && newUserId) {
             clearInterval(checkAuth);
-            loginWindow.close();
+            vintedWindow.close();
 
-            const userData = await fetchVintedUserData(newToken, newUserId);
-            resolve({ success: true, token: newToken, userData });
+            try {
+              const userData = await fetchVintedUserData(newToken, newUserId);
+              resolve({ success: true, token: newToken, userData });
+            } catch (error) {
+              console.error('Erreur de récupération des données:', error);
+              resolve({ success: false, error: 'Erreur de récupération des données' });
+            }
+          }
+
+          // Timeout après 5 minutes
+          if (checkCount >= maxChecks) {
+            clearInterval(checkAuth);
+            vintedWindow.close();
+            resolve({ success: false, error: 'Délai de connexion dépassé' });
           }
         } catch (error) {
           console.error('Erreur de vérification:', error);
         }
       }, 1000);
 
-      // Gérer la fermeture de la fenêtre
-      const handleWindowClose = () => {
+      // Gérer la fermeture manuelle de la fenêtre
+      const handleClose = () => {
         clearInterval(checkAuth);
         resolve({ success: false, error: 'Connexion annulée' });
       };
 
-      loginWindow.addEventListener('beforeunload', handleWindowClose);
-
-      // Timeout après 5 minutes
-      setTimeout(() => {
-        clearInterval(checkAuth);
-        loginWindow.close();
-        resolve({ success: false, error: 'Délai de connexion dépassé' });
-      }, 300000);
+      vintedWindow.addEventListener('beforeunload', handleClose);
     });
 
   } catch (error) {
