@@ -8,10 +8,11 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="google-site-verification" content="%REACT_APP_GOOGLE_SITE_VERIFICATION%" />
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' https://www.vinted.fr https://*.vinted.net;
+      default-src 'self' https://www.vinted.fr;
       img-src 'self' https://*.vinted.net data: blob:;
       connect-src 'self' https://www.vinted.fr https://*.vinted.net;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.vinted.fr;
+      frame-src 'self' https://www.vinted.fr;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
       style-src 'self' 'unsafe-inline';
     ">
     <meta
@@ -22,8 +23,11 @@
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Dashboard Vinted</title>
     <script>
-      // Configurer le domaine pour les cookies
-      document.domain = 'dashboradsales.web.app';
+      try {
+        document.domain = 'dashboradsales.web.app';
+      } catch (e) {
+        console.error('Erreur de configuration du domaine:', e);
+      }
     </script>
   </head>
   <body>

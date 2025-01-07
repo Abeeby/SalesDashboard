@@ -16,41 +16,25 @@ export async function authenticateVinted() {
       }
     }
 
-    // Utiliser la nouvelle URL de connexion Vinted
-    const vintedWindow = window.open(
-      'https://www.vinted.fr/auth/login',  // Nouvelle URL de connexion
-      '_blank',
-      'width=600,height=600,scrollbars=yes'
-    );
+    // Rediriger vers la page de connexion Vinted
+    window.location.href = 'https://www.vinted.fr/auth/login';
 
-    if (!vintedWindow) {
-      throw new Error('Le blocage des popups est activé. Veuillez l\'autoriser pour vous connecter.');
-    }
-
+    // Attendre la redirection et la connexion
     return new Promise((resolve) => {
-      const checkInterval = setInterval(async () => {
-        try {
-          if (vintedWindow.closed) {
-            clearInterval(checkInterval);
-            const newToken = getCookie('access_token_web');
-            const newUserId = getCookie('user_id');
-            
-            if (newToken && newUserId) {
-              const userData = await fetchVintedUserData(newToken, newUserId);
-              resolve({ success: true, token: newToken, userData });
-            } else {
-              resolve({ success: false, error: 'Connexion annulée' });
-            }
-          }
-        } catch (error) {
-          console.error('Erreur de vérification:', error);
+      const checkAuth = setInterval(async () => {
+        const newToken = getCookie('access_token_web');
+        const newUserId = getCookie('user_id');
+
+        if (newToken && newUserId) {
+          clearInterval(checkAuth);
+          const userData = await fetchVintedUserData(newToken, newUserId);
+          resolve({ success: true, token: newToken, userData });
         }
       }, 1000);
 
       // Timeout après 5 minutes
       setTimeout(() => {
-        clearInterval(checkInterval);
-        vintedWindow.close();
+        clearInterval(checkAuth);
         resolve({ success: false, error: 'Délai de connexion dépassé' });
       }, 300000);
     });
