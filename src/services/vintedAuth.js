@@ -1,4 +1,4 @@
-import { getCookie, setCookie } from '../utils/cookies';
+import { getCookie } from '../utils/cookies';
 
 const VINTED_API = 'https://www.vinted.fr/api/v2';
 const LOGIN_URL = 'https://www.vinted.fr/oauth/authorize';
