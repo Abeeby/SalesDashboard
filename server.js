@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { getVintedData, refreshVintedAuth } = require('./auth');
+const { getVintedData, initializeCookies } = require('./auth');
 
 const app = express();
 
@@ -9,7 +9,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Route pour obtenir les données Vinted
+// Initialiser les cookies au démarrage
+initializeCookies().catch(console.error);
+
 app.get('/api/vinted/data', async (req, res) => {
   try {
     const data = await getVintedData();
@@ -18,16 +20,6 @@ app.get('/api/vinted/data', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// Rafraîchir les tokens périodiquement (toutes les 30 minutes)
-setInterval(async () => {
-  try {
-    await refreshVintedAuth();
-    console.log('Tokens rafraîchis avec succès');
-  } catch (error) {
-    console.error('Erreur de rafraîchissement périodique:', error);
-  }
-}, 30 * 60 * 1000);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
