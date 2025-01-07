@@ -1,39 +1,74 @@
 const express = require('express');
 const cors = require('cors');
+const { authenticateVinted } = require('./auth');
+const { loadCookies } = require('./cookies');
 const fetch = require('node-fetch');
+
 const app = express();
 
-// Configuration CORS
 app.use(cors({
-  origin: 'https://dashboradsales.web.app',
+  origin: ['http://localhost:3000', 'https://dashboradsales.web.app'],
   credentials: true
 }));
 
 app.use(express.json());
 
+// Middleware pour attacher les cookies Vinted
+app.use(async (req, res, next) => {
+  const cookies = await loadCookies();
+  if (cookies) {
+    req.vintedCookies = cookies;
+  }
+  next();
+});
+
+// Route pour l'authentification
+app.post('/api/auth/vinted', async (req, res) => {
+  try {
+    const authResult = await authenticateVinted();
+    if (authResult.success) {
+      // Attacher les cookies à la réponse
+      authResult.cookies.forEach(cookie => {
+        res.cookie(cookie.name, cookie.value, {
+          domain: '.web.app',
+          path: '/',
+          secure: true,
+          sameSite: 'none'
+        });
+      });
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: 'Échec de l\'authentification' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Proxy pour les requêtes Vinted
 app.use('/api/vinted', async (req, res) => {
   try {
-    const vintedUrl = `https://www.vinted.fr/api/v2${req.path}`;
-    const response = await fetch(vintedUrl, {
+    const cookies = req.vintedCookies;
+    if (!cookies) {
+      return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    const response = await fetch(`https://www.vinted.fr${req.path}`, {
       method: req.method,
       headers: {
-        'Authorization': req.headers.authorization,
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': req.headers.cookie
+        'Cookie': cookies.map(c => `${c.name}=${c.value}`).join('; '),
+        ...req.headers
       }
     });
 
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error('Erreur proxy:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Serveur proxy démarré sur le port ${PORT}`);
+  console.log(`Serveur démarré sur le port ${PORT}`);
 }); 
