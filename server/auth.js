@@ -5,64 +5,99 @@ const { saveCookies, loadCookies } = require('./cookies');
 const VINTED_API = 'https://www.vinted.fr/api/v2';
 const USER_ID = process.env.VINTED_USER_ID || '117458538';
 
-// Cookies initiaux de votre session active
+// Cookies initiaux de la session active
 const INITIAL_COOKIES = {
   anon_id: "435b3e2d-cc91-4b90-8282-2a74ed245632",
-  _vinted_fr_session: "M0Jad0dJenNXMVZreDUrS1BiZlVaSk9LZGlDZmRadms3dWN3cXhCbmRYRHprOTFKZEMwQks0WXVvZTM4UFpPYndySzRJLzhSSnoyS0VTYVpySm12b1B6RWw1RDczbW5ZMmxxQ2FjdkhxWTA3YjN4REdZOHdBTXZwZHNUQ3p0a0JxTUFjbThNTzNaeS8yaUsrQm9HS2tuRTNEWnRrOXZZZDNzNGx3VVlyMW9NMW5KZTdTOVRxc1hKTG5LN2c0dzBBZDlWVFVpR1Vrdk1YYkY2bGlkUFZNdHVpSjRBWk5BTkowM1dWYjg3aVVCZXN3NTJSa1pwS251SzZUUnBjSGNvWnc5cElpR3RmTjlpRDBVeUZwbnQ5aHZseElyL2hnM0xkR0ZVN2ZuSGpib3ZtRUd6ekF6eXlNa1RzTnMzczVqRk9BZ3AzSDZIWExNakFrSXZUbFRheEtYTmw5VEh2bGo3RXN6UUIzcVRPOUNLVmhFZVF1cTJtR21vSmxscDc3ZTFhZzFUQTE1cEplOXBqZFZKVXFFNlNaNXQrRW1JcWpmNW5jTGJhb3pmdEJUWi95Rmw3V2FhaXdWNDczeFhpWmt5Z0RpWmpKSHlhZWMyNzd4Wm9SMk9KVmoxazlvZFMyd2pBWWlxVUNoclRiQWxyMlNETkl2anh3YWJqZE5tSFNaYUZXelVKeTBBbktzMFQxTkQyWjlHbDJNemNieVI2Y05taE85b05XQWw3cjlyc0xFU2p5bmhuVS93WjV2dkxTZG9KYk81a0QxMG55R1c4aTJaUWxTMS82bnljdjNQOWdoQlArT2RzbGcxQlE4Ylh0VXNmUnFhTmxDQWMxclc0UzR2alNUL3U1eEdybTJlRFpPcjR1VU5RcVpldzJQL1cwRWNranhZV1h3dWFpWWJZaDczaHY1UTJZT2s4eWJOdEw4aVMzZGpoblJ0WWlXOG40SDBWVWlMdHI3UzJDeVdCVWlnV0E2TkNSdTJoY3lOc2lsbExKUFFFbEJTdWp6TnR1dzVQWDZpWVVqeDZZS0d5RVBMTlRyTUtjVXM3WlRNMk9zSHVqU3MrNzExeEVyUERYTnNEbElyb1JLV045Wmd5NHZwREVVbVh4RTBROGtMaGtGcXJxNE9vSFJ2K2tkenJYSzNzVm9FWGFnQ2RyMmNJUGZnVlR0SE13OGdGSWwwSjVkems1R3hTTmxMdkdQNkwwWU4xcFZORFNCRTFYL29UaXB6Mnk3K0lFUU5HL1dMdzVXY1Z4Q1ArMzJUYVBjK2xDeXBMcXUxUFk5b3VkSTgzQzBtSlpDVkRQdmM2aXVOZG1IaVF5ZlNubEt2WndXa0FTYlh6Q096VzROS0hlMDF2b0wrZ0VRSUhMT0F4ek9PSGF6bHZaS3NtV2MyUGt0NGdyMzZnUHh0TXllRlh1L0hIcjVMNU90L1ZyVEs0V0YxTVdlMngwU0RpQXVUVFNqclRvQmdUU2hGZXB2REtrbnkzaFpjbDUxRkJUYi9YWlNJT3Z3RXlCaHpCRmtoOEt4V3IwN1dQNitveW9qTzUrWW5EcEc0eks3amI3Ky9raVFVVWp2QXA5dGJRSmJNVjRsMVBBL3hSaTFZNDgwd0RjUXFBQi9CbC9vcWl3TU1nMDd0TkJNdnJhYlFyWTUxaXNuQXFScHlRZDVPTkhpcldodUExZEFKRmpSR3dBU29WQ0tOZjFYOCtHV2N3WFlGbE8xUEJNM0MyRUd0a2kzYmc2UXh2Ry9RVHl6bkIzSWlhaXdML3hsUUhQdzR3MWMyaGdiYkdEOTBrWTdnRVFJWWwydFhuL1JaN0szcXF4NGd6eGF4ZGM4L2tzazBVRno5WU1oNnNzSmdrcUdvd3pjRE05cUtIbXVYS2IwTEFjY0VRVnc3R20wZUcySUc2YTd0NDUyOCtzNEJoRnNqcDQyYTB3aEtXY29yeDdVUHFZN1Q5ZmhkNUdxbjRFakdDVWpUNVJSL2VuQ2c0YmZteExOQTFBZHF2RjVOY1FJaG4yUnV2cWtBRXk3emVWelpiMWMxdFlWMk5kejlrcW02UkVOcVhWUncxemt6dkpITHVUckJZMjk2T3NPNzJ3UDA3WHY3YTZUYm00VHQ2aTk2M2dha2hidFNRSCtpcGdJcXlNK09KWTFtMEdQdzNIeGtMSmhTb3FVcnF4eFMrR3NuRndtcmlXdGtnSHpTL0V4T3hEKzhhNnA2TFZrWkQ2MnloY3lQVXNoRytsRUM3QW5UWlFWYlFqSFlNRStmTmRQSDRESC82WFdzUWlnVTRXeVRrRXM2a0FBb0cvVGZuQ2MvcDhjYjFTelVBeVVCenhMVkNxZmRNNUJ6Uk9BUXF6VGVXMkpSRFBGY01ETWhkVmRDYVU3bXAxKy84elplaHNRbnU3OWRVK0N6Zkp3M2RZcGdwM3BsQ2I5bkNqV1B5TXliVzc4cVpFYnFycjZRbUQ2c3A0NlhERjdkZVEzL1ljN1luUnErWUZVZzFwVnRWVFRRKzVDWS9hZ1JxbnZEODFkK1E1U3BiN253eHVnRE5SbVlld0FGWUlRSlZRckZRMXZNaGhLenU3d2svc1k1RW9mT0lNR2EyaHlkUHBpZ2ltQ3lnYjZickJvOEI4QlhJVmN0UUNPQ0VIZExzRDRka0UzRHlBblFvd2kyWVp6V000RHVsZTg1Uis0cTM4dlVGQjRLZ1hEZDhwZHBCdUtSQno0NDUrSi85b2lvSGs3QWxWRnloNm5zSzNtVzFLRUJSSFNxWmNPUVJDTlRjUkYzU3ZJRm1QY1F6bEFvWGJBNzRqVGhHNVlUU3BUVXQwbldRLS1WeG0xdXVDTlNRbE5oWnFsRTZQbFFnPT0%3D--78fb0d9b49001e14e0c17347ccbb7c0dc091102c",
-  cf_clearance: "YeLHlO2s7qZ1eaEFdXlpwIyCsudjHZvEixqssX8AbUQ-1736177077-1.2.1.1-5H_.CqxTKph47esU.vkKo6A.B_wWF0T9oebb3XTS8tPrAGe_5vcMPBtm5cT7ld.406GEIFd1vmJ.7w2T_huGje2_wKe3xtvEQ50whf4F6Wz7zkCO7hHU_L1L0s_Y4s4_sG0oRgaDJMEjGhewkfKhMoGfmucOHp68OW9tK4GKMgrf7ddCQRA0JqxoymCQ4DhsHbIMceI5W9wzl.yjjkej359B6jdCYxpe9jY0zvlI.AFoyUFEDbl4jkEBxkqeUZ.ptnYTdMziUGnfY1.u31Q6wacA.W.6Z8NVX39laXPNXuomNqxGH9UXpR6qW_JqfxqlXULc1.SsiE9ynB1dqiwpllacYeF.syiYfQbbPZdS5wk",
-  datadome: "531dI43IufIFYfMQ3EAE6ZZf2My1RiIMaJjMUHO7TW629eIVpJs4oKvwkCCmRNd9rFbPCqhwUUBjESLqePsIXswnFnBDCfoR8neYNy1YYkiyn4N3Pxu6EotDIXY5Ysl3"
+  v_udt: "eTQ5V0RtbnBzWmQ4d1UrQ2RYbUkrdnI0dzJjTHRDcStnME04Y2c9PS0tTy85cFk4Q2FmVkd4WnM1Ui0tMndaaVFnL3F0Y1ZaVUVYeCs0WVkwUT09",
+  v_sid: "7b79c82c-1736266933",
+  datadome: "P__vBLBLDvj0NxLOJap~_ZsdaxUYMvn2kA2b_SOxvIhpx0nLWByu7gzfvLr~XqQI6b8VErU0ti0a02fPVBXcpjKJshceZRHRGPrn9r2Y7BO~YY4eeQj~E2EAdxgB1Ump",
+  cf_clearance: "_hCM38ueCT.XIK8vlbS3O3zMoUb.w4j9QZLRFKWrhrQ-1736266575-1.2.1.1-sEOmLIXF_dYdwabX1.7qcNIRCY_b4zdVSko7ePY9uJvxGsYbv07jJ7qsvqsy03jj27mb_.ScGcn0p6vjG4gGev.xR5ugJJY6n9YH2miOU9bxJ8gCC0JZOP909UmcbZXE7vgM8SxFfWbqi9Hl2nQ6F1wp3Oo7P7qZdY96yR5xNz5EkKKsC1XIDs5XzCKbUsuze3Few.G73XP_fgKBeJWiEZmvPNDEMCyTDhd_7H04VCmY0eDFNvtu1zhghgwGTPbenlwCvk78s3E8nPke0nj0aBBHuZR.M_OPkhkWWczfnQKlo93j9l4yx.Lybbfxkc4NndIobJvgL7dBiuUVDb9l2pL_YY7pOrN9xWQth1h3W2w"
 };
 
-// Headers essentiels
+// Headers essentiels avec les valeurs du nouveau HAR
 const VINTED_HEADERS = {
+  'Host': 'www.vinted.fr',
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0',
-  'Accept': 'application/json',
-  'Accept-Language': 'fr,fr-FR;q=0.9,en-US;q=0.8,en;q=0.7',
-  'Content-Type': 'application/json',
-  'X-App-Version': '2024.2.0',
-  'Origin': 'https://www.vinted.fr',
-  'Referer': 'https://www.vinted.fr/',
-  'X-Requested-With': 'XMLHttpRequest',
-  'Connection': 'keep-alive'
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.5',
+  'Accept-Encoding': 'gzip, deflate, br, zstd',
+  'Connection': 'keep-alive',
+  'Upgrade-Insecure-Requests': '1',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'same-origin',
+  'Sec-Fetch-User': '?1',
+  'TE': 'trailers'
 };
 
-// Initialiser les cookies au démarrage
 async function initializeCookies() {
-  const initialCookies = Object.entries(INITIAL_COOKIES).map(([name, value]) => ({
-    name,
-    value,
-    domain: '.vinted.fr',
-    path: '/',
-    secure: true,
-    sameSite: 'none'
-  }));
-  
-  await saveCookies(initialCookies);
-  console.log('Cookies initiaux sauvegardés');
-  return initialCookies;
+  try {
+    console.log('Initialisation des cookies...');
+    const initialCookies = Object.entries(INITIAL_COOKIES).map(([name, value]) => ({
+      name,
+      value,
+      domain: '.vinted.fr',
+      path: '/',
+      secure: true,
+      sameSite: 'Lax'
+    }));
+    
+    await saveCookies(initialCookies);
+    console.log('Cookies initiaux sauvegardés avec succès');
+    return initialCookies;
+  } catch (error) {
+    console.error('Erreur lors de l\'initialisation des cookies:', error);
+    throw error;
+  }
 }
 
 async function getVintedData() {
   try {
+    console.log('Chargement des cookies...');
     let cookies = await loadCookies();
     if (!cookies) {
+      console.log('Pas de cookies trouvés, initialisation...');
       cookies = await initializeCookies();
     }
 
-    const response = await fetch(`${VINTED_API}/users/${USER_ID}/items`, {
+    const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    console.log('En-tête Cookie:', cookieHeader.substring(0, 100) + '...');
+
+    // D'abord, faire une requête à la page principale
+    console.log('Requête à la page principale...');
+    const mainResponse = await fetch('https://www.vinted.fr/member/' + USER_ID, {
       headers: {
         ...VINTED_HEADERS,
-        'Cookie': cookies.map(c => `${c.name}=${c.value}`).join('; ')
+        'Cookie': cookieHeader
       }
     });
 
-    if (!response.ok) {
-      throw new Error(`Erreur API: ${response.status}`);
+    if (!mainResponse.ok) {
+      throw new Error(`Erreur page principale: ${mainResponse.status}`);
     }
 
-    return await response.json();
+    // Ensuite, faire la requête API
+    console.log('Requête à l\'API...');
+    const apiResponse = await fetch(`${VINTED_API}/users/${USER_ID}/items`, {
+      headers: {
+        ...VINTED_HEADERS,
+        'Accept': 'application/json',
+        'Cookie': cookieHeader
+      }
+    });
+
+    if (!apiResponse.ok) {
+      const text = await apiResponse.text();
+      console.error('Réponse API:', text);
+      throw new Error(`Erreur API: ${apiResponse.status}`);
+    }
+
+    const data = await apiResponse.json();
+    console.log('Données reçues avec succès');
+    return data;
+
   } catch (error) {
-    console.error('Erreur de récupération des données:', error);
+    console.error('Erreur détaillée:', error);
     throw error;
   }
 }

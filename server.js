@@ -10,14 +10,21 @@ app.use(cors({
 }));
 
 // Initialiser les cookies au démarrage
-initializeCookies().catch(console.error);
+initializeCookies().catch(error => {
+  console.error('Erreur d\'initialisation des cookies:', error);
+});
 
 app.get('/api/vinted/data', async (req, res) => {
   try {
+    console.log('Requête reçue pour les données Vinted');
     const data = await getVintedData();
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur serveur:', error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
