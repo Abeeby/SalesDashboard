@@ -1,7 +1,7 @@
 import { getCookie } from '../utils/cookies';
 
 const VINTED_API = 'https://www.vinted.fr/api/v2';
-const LOGIN_URL = 'https://www.vinted.fr/oauth/authorize';
+const LOGIN_URL = 'https://www.vinted.fr/member/login';
 
 export async function authenticateVinted() {
   try {
@@ -17,48 +17,50 @@ export async function authenticateVinted() {
       }
     }
 
-    // Paramètres OAuth
-    const oauthParams = new URLSearchParams({
-      client_id: process.env.REACT_APP_VINTED_CLIENT_ID,
-      redirect_uri: `${window.location.origin}/auth/callback`,
-      response_type: 'code',
-      scope: 'read write',
-      state: Math.random().toString(36).substring(7)
-    });
+    // Ouvrir la page de connexion dans une nouvelle fenêtre
+    const loginWindow = window.open(LOGIN_URL, 'VintedLogin', 
+      'width=600,height=700,menubar=no,toolbar=no,location=no'
+    );
 
-    // Sauvegarder l'état actuel
-    sessionStorage.setItem('auth_state', oauthParams.get('state'));
-
-    // Rediriger vers la page de connexion Vinted
-    const loginUrl = `${LOGIN_URL}?${oauthParams.toString()}`;
-    window.location.href = loginUrl;
+    if (!loginWindow) {
+      throw new Error('Le blocage des popups est activé. Veuillez l\'autoriser pour vous connecter.');
+    }
 
     return new Promise((resolve) => {
-      // Cette promesse sera résolue après la redirection
-      window.addEventListener('message', async (event) => {
-        if (event.origin === window.location.origin && event.data.type === 'VINTED_AUTH') {
-          const { code } = event.data;
-          try {
-            // Échanger le code contre un token
-            const tokenResponse = await fetch('/api/auth/token', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ code })
-            });
+      // Vérifier périodiquement les cookies
+      const checkAuth = setInterval(async () => {
+        try {
+          const newToken = getCookie('access_token_web');
+          const newUserId = getCookie('user_id');
 
-            const tokenData = await tokenResponse.json();
-            if (tokenData.success) {
-              const userData = await fetchVintedUserData(tokenData.token, tokenData.userId);
-              resolve({ success: true, token: tokenData.token, userData });
-            } else {
-              resolve({ success: false, error: 'Échec de l\'authentification' });
-            }
-          } catch (error) {
-            resolve({ success: false, error: error.message });
+          if (newToken && newUserId) {
+            clearInterval(checkAuth);
+            loginWindow.close();
+
+            const userData = await fetchVintedUserData(newToken, newUserId);
+            resolve({ success: true, token: newToken, userData });
           }
+        } catch (error) {
+          console.error('Erreur de vérification:', error);
         }
-      });
+      }, 1000);
+
+      // Gérer la fermeture de la fenêtre
+      const handleWindowClose = () => {
+        clearInterval(checkAuth);
+        resolve({ success: false, error: 'Connexion annulée' });
+      };
+
+      loginWindow.addEventListener('beforeunload', handleWindowClose);
+
+      // Timeout après 5 minutes
+      setTimeout(() => {
+        clearInterval(checkAuth);
+        loginWindow.close();
+        resolve({ success: false, error: 'Délai de connexion dépassé' });
+      }, 300000);
     });
+
   } catch (error) {
     console.error('Erreur d\'authentification:', error);
     return { success: false, error: error.message };
