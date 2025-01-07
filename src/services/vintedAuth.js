@@ -1,10 +1,11 @@
-import { getCookie } from '../utils/cookies';
+import { getCookie, setCookie } from '../utils/cookies';
 
 const VINTED_API = 'https://www.vinted.fr/api/v2';
+const LOGIN_URL = 'https://www.vinted.fr/oauth/authorize';
 
 export async function authenticateVinted() {
   try {
-    // Vérifier d'abord les cookies existants
+    // Vérifier les cookies existants
     const accessToken = getCookie('access_token_web');
     const userId = getCookie('user_id');
 
@@ -16,29 +17,48 @@ export async function authenticateVinted() {
       }
     }
 
-    // Rediriger vers la page de connexion Vinted
-    window.location.href = 'https://www.vinted.fr/auth/login';
-
-    // Attendre la redirection et la connexion
-    return new Promise((resolve) => {
-      const checkAuth = setInterval(async () => {
-        const newToken = getCookie('access_token_web');
-        const newUserId = getCookie('user_id');
-
-        if (newToken && newUserId) {
-          clearInterval(checkAuth);
-          const userData = await fetchVintedUserData(newToken, newUserId);
-          resolve({ success: true, token: newToken, userData });
-        }
-      }, 1000);
-
-      // Timeout après 5 minutes
-      setTimeout(() => {
-        clearInterval(checkAuth);
-        resolve({ success: false, error: 'Délai de connexion dépassé' });
-      }, 300000);
+    // Paramètres OAuth
+    const oauthParams = new URLSearchParams({
+      client_id: process.env.REACT_APP_VINTED_CLIENT_ID,
+      redirect_uri: `${window.location.origin}/auth/callback`,
+      response_type: 'code',
+      scope: 'read write',
+      state: Math.random().toString(36).substring(7)
     });
 
+    // Sauvegarder l'état actuel
+    sessionStorage.setItem('auth_state', oauthParams.get('state'));
+
+    // Rediriger vers la page de connexion Vinted
+    const loginUrl = `${LOGIN_URL}?${oauthParams.toString()}`;
+    window.location.href = loginUrl;
+
+    return new Promise((resolve) => {
+      // Cette promesse sera résolue après la redirection
+      window.addEventListener('message', async (event) => {
+        if (event.origin === window.location.origin && event.data.type === 'VINTED_AUTH') {
+          const { code } = event.data;
+          try {
+            // Échanger le code contre un token
+            const tokenResponse = await fetch('/api/auth/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code })
+            });
+
+            const tokenData = await tokenResponse.json();
+            if (tokenData.success) {
+              const userData = await fetchVintedUserData(tokenData.token, tokenData.userId);
+              resolve({ success: true, token: tokenData.token, userData });
+            } else {
+              resolve({ success: false, error: 'Échec de l\'authentification' });
+            }
+          } catch (error) {
+            resolve({ success: false, error: error.message });
+          }
+        }
+      });
+    });
   } catch (error) {
     console.error('Erreur d\'authentification:', error);
     return { success: false, error: error.message };
@@ -99,10 +119,11 @@ async function fetchVintedUserData(token, userId) {
   }
 }
 
+// Fonction de vérification des tokens
 export async function checkVintedAuth() {
   const token = getCookie('access_token_web');
   const userId = getCookie('user_id');
-  
+
   if (!token || !userId) {
     console.log('Pas de tokens trouvés');
     return false;
@@ -112,13 +133,13 @@ export async function checkVintedAuth() {
     const response = await fetch(`${VINTED_API}/users/${userId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'Cookie': document.cookie
+      },
+      credentials: 'include'
     });
 
-    const isValid = response.ok;
-    console.log('Vérification auth:', isValid);
-    return isValid;
+    return response.ok;
   } catch (error) {
     console.error('Erreur de vérification auth:', error);
     return false;
