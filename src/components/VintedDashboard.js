@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  BarChart, Bar, PieChart, Pie, Cell
+  PieChart, Pie
 } from 'recharts';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
