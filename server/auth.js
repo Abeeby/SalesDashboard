@@ -61,24 +61,10 @@ async function getVintedData() {
     }
 
     const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-    console.log('En-tête Cookie:', cookieHeader.substring(0, 100) + '...');
 
-    // D'abord, faire une requête à la page principale
-    console.log('Requête à la page principale...');
-    const mainResponse = await fetch('https://www.vinted.fr/member/' + USER_ID, {
-      headers: {
-        ...VINTED_HEADERS,
-        'Cookie': cookieHeader
-      }
-    });
-
-    if (!mainResponse.ok) {
-      throw new Error(`Erreur page principale: ${mainResponse.status}`);
-    }
-
-    // Ensuite, faire la requête API
-    console.log('Requête à l\'API...');
-    const apiResponse = await fetch(`${VINTED_API}/users/${USER_ID}/items`, {
+    // Récupérer les données du profil
+    console.log('Récupération des données du profil...');
+    const profileResponse = await fetch(`${VINTED_API}/users/${USER_ID}`, {
       headers: {
         ...VINTED_HEADERS,
         'Accept': 'application/json',
@@ -86,15 +72,62 @@ async function getVintedData() {
       }
     });
 
-    if (!apiResponse.ok) {
-      const text = await apiResponse.text();
-      console.error('Réponse API:', text);
-      throw new Error(`Erreur API: ${apiResponse.status}`);
+    // Récupérer les articles
+    console.log('Récupération des articles...');
+    const itemsResponse = await fetch(`${VINTED_API}/users/${USER_ID}/items?per_page=100&page=1&order=newest_first`, {
+      headers: {
+        ...VINTED_HEADERS,
+        'Accept': 'application/json',
+        'Cookie': cookieHeader
+      }
+    });
+
+    // Récupérer les statistiques de vente
+    console.log('Récupération des statistiques...');
+    const statsResponse = await fetch(`${VINTED_API}/users/${USER_ID}/stats`, {
+      headers: {
+        ...VINTED_HEADERS,
+        'Accept': 'application/json',
+        'Cookie': cookieHeader
+      }
+    });
+
+    if (!profileResponse.ok || !itemsResponse.ok || !statsResponse.ok) {
+      throw new Error('Erreur lors de la récupération des données');
     }
 
-    const data = await apiResponse.json();
-    console.log('Données reçues avec succès');
-    return data;
+    const [profile, items, stats] = await Promise.all([
+      profileResponse.json(),
+      itemsResponse.json(),
+      statsResponse.json()
+    ]);
+
+    // Formater les données pour le dashboard
+    return {
+      profile: {
+        username: profile.username,
+        rating: profile.feedback_reputation,
+        totalItems: profile.items_count,
+        followers: profile.followers_count,
+        following: profile.following_count
+      },
+      items: items.items.map(item => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        status: item.status,
+        created_at: item.created_at,
+        views: item.view_count,
+        likes: item.favourite_count
+      })),
+      stats: {
+        totalSales: stats.total_sales,
+        totalRevenue: stats.total_revenue,
+        averagePrice: stats.average_price,
+        salesByMonth: stats.sales_by_month,
+        viewsTotal: stats.total_views
+      }
+    };
 
   } catch (error) {
     console.error('Erreur détaillée:', error);
