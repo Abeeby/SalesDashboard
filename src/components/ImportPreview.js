@@ -1,85 +1,48 @@
 import React from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Alert,
-  Box
-} from '@mui/material';
+import { motion } from 'framer-motion';
 
-const ImportPreview = ({ 
-  open, 
-  onClose, 
-  data, 
-  validation, 
-  onConfirm 
-}) => {
+export function ImportPreview({ data, onConfirm, onCancel }) {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>Prévisualisation de l'import</DialogTitle>
-      <DialogContent>
-        {validation.errors.length > 0 && (
-          <Box mb={2}>
-            <Alert severity="error">
-              {validation.errors.map((error, i) => (
-                <div key={i}>{error}</div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="import-preview"
+    >
+      <h3>Aperçu des données</h3>
+      <div className="preview-table">
+        <table>
+          <thead>
+            <tr>
+              {Object.keys(data[0] || {}).map(header => (
+                <th key={header}>{header}</th>
               ))}
-            </Alert>
-          </Box>
-        )}
-        {validation.warnings.length > 0 && (
-          <Box mb={2}>
-            <Alert severity="warning">
-              {validation.warnings.map((warning, i) => (
-                <div key={i}>{warning}</div>
-              ))}
-            </Alert>
-          </Box>
-        )}
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Marque</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Prix</TableCell>
-              <TableCell>Taille</TableCell>
-              <TableCell>Couleur</TableCell>
-              <TableCell>Référence</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{item.marque}</TableCell>
-                <TableCell>{item.type}</TableCell>
-                <TableCell>{item.prix}€</TableCell>
-                <TableCell>{item.taille}</TableCell>
-                <TableCell>{item.couleur}</TableCell>
-                <TableCell>{item.reference}</TableCell>
-              </TableRow>
+            </tr>
+          </thead>
+          <tbody>
+            {data.slice(0, 5).map((row, index) => (
+              <tr key={index}>
+                {Object.values(row).map((cell, i) => (
+                  <td key={i}>{cell}</td>
+                ))}
+              </tr>
             ))}
-          </TableBody>
-        </Table>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Annuler</Button>
-        <Button 
-          onClick={onConfirm}
-          disabled={!validation.isValid}
-          variant="contained"
-        >
-          Confirmer l'import
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
+          </tbody>
+        </table>
+        {data.length > 5 && (
+          <div className="more-rows">
+            Et {data.length - 5} lignes supplémentaires...
+          </div>
+        )}
+      </div>
 
-export default ImportPreview; 
+      <div className="preview-actions">
+        <button onClick={onConfirm} className="confirm">
+          Confirmer l'import
+        </button>
+        <button onClick={onCancel} className="cancel">
+          Annuler
+        </button>
+      </div>
+    </motion.div>
+  );
+} 

@@ -84,7 +84,7 @@ export default function ProductList() {
           >
             {showFilters ? 'Masquer filtres' : 'Afficher filtres'}
           </button>
-          <input
+            <input
             type="text"
             placeholder="Rechercher..."
             value={searchTerm}

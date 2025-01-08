@@ -12,37 +12,14 @@ function VintedDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // URL de l'API basée sur l'environnement
-  const API_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://dashboradsales.web.app/api/vinted/data'  // URL de production mise à jour
-    : 'http://localhost:3001/api/vinted/data';
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Tentative de connexion à:', API_URL);
-        const response = await fetch(API_URL, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Origin': window.location.origin
-          },
-          mode: 'cors'
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Réponse serveur:', errorText);
-          throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
-        }
-
+        const response = await fetch('/api/vinted/data');
+        if (!response.ok) throw new Error('Erreur serveur');
         const result = await response.json();
-        console.log('Données reçues:', result);
         setData(result);
       } catch (err) {
-        console.error('Erreur de récupération:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -52,98 +29,56 @@ function VintedDashboard() {
     fetchData();
     const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
-  }, [API_URL]);
+  }, []);
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box p={3}>
-        <Alert severity="error">
-          Erreur de chargement: {error}
-        </Alert>
-      </Box>
-    );
-  }
-
-  if (!data) {
-    return (
-      <Box p={3}>
-        <Alert severity="info">
-          Pas de données disponibles
-        </Alert>
-      </Box>
-    );
-  }
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">{error}</Alert>;
+  if (!data) return <Alert severity="info">Pas de données</Alert>;
 
   return (
-    <div className="dashboard">
-      {/* Statistiques générales */}
+    <Box p={3}>
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Articles en vente</h3>
-          <p>{data.profile?.totalItems || 0}</p>
+          <p>{data.stats.totalItems}</p>
         </div>
         <div className="stat-card">
-          <h3>Ventes totales</h3>
-          <p>{data.stats?.totalSales || 0}</p>
+          <h3>Vues totales</h3>
+          <p>{data.stats.totalViews}</p>
         </div>
         <div className="stat-card">
-          <h3>Revenu total</h3>
-          <p>{data.stats?.totalRevenue || 0}€</p>
+          <h3>Likes totaux</h3>
+          <p>{data.stats.totalLikes}</p>
         </div>
         <div className="stat-card">
           <h3>Prix moyen</h3>
-          <p>{data.stats?.averagePrice || 0}€</p>
+          <p>{data.stats.averagePrice.toFixed(2)}€</p>
         </div>
       </div>
 
-      {/* Graphiques */}
       <div className="charts-grid">
-        {data.stats?.salesByMonth && (
-          <div className="chart">
-            <h3>Ventes par mois</h3>
-            <LineChart width={600} height={300} data={data.stats.salesByMonth}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="sales" stroke="#8884d8" />
-            </LineChart>
-          </div>
-        )}
-
-        {data.items && (
-          <div className="chart">
-            <h3>Articles par statut</h3>
-            <PieChart width={400} height={300}>
-              <Pie
-                data={data.items.reduce((acc, item) => {
-                  const status = acc.find(s => s.name === item.status);
-                  if (status) status.value++;
-                  else acc.push({ name: item.status, value: 1 });
+        <div className="chart">
+          <h3>Articles par statut</h3>
+          <PieChart width={400} height={300}>
+            <Pie
+              data={Object.entries(
+                data.items.reduce((acc, item) => {
+                  acc[item.status] = (acc[item.status] || 0) + 1;
                   return acc;
-                }, [])}
-                cx={200}
-                cy={150}
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              />
-              <Tooltip />
-            </PieChart>
-          </div>
-        )}
+                }, {})
+              ).map(([name, value]) => ({ name, value }))}
+              cx={200}
+              cy={150}
+              labelLine={false}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+            />
+            <Tooltip />
+          </PieChart>
+        </div>
       </div>
-    </div>
+    </Box>
   );
 }
 
