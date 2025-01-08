@@ -12,31 +12,37 @@ function VintedDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Détecter si nous sommes en production ou développement
+  // URL de l'API basée sur l'environnement
   const API_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://votre-domaine.com/api/vinted/data'
+    ? 'https://dashboradsales.web.app/api/vinted/data'  // URL de production mise à jour
     : 'http://localhost:3001/api/vinted/data';
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Fetching data from:', API_URL);
+        console.log('Tentative de connexion à:', API_URL);
         const response = await fetch(API_URL, {
+          method: 'GET',
           credentials: 'include',
           headers: {
-            'Accept': 'application/json'
-          }
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          },
+          mode: 'cors'
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          console.error('Réponse serveur:', errorText);
+          throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
         }
 
         const result = await response.json();
-        console.log('Data received:', result);
+        console.log('Données reçues:', result);
         setData(result);
       } catch (err) {
-        console.error('Fetch error:', err);
+        console.error('Erreur de récupération:', err);
         setError(err.message);
       } finally {
         setLoading(false);
