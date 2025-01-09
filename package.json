@@ -16,10 +16,12 @@
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.0",
     "@mui/x-date-pickers": "^6.3.1",
+    "@playwright/test": "^1.49.1",
     "@popperjs/core": "^2.11.7",
     "@react-pdf/renderer": "^4.1.6",
     "@react-spring/web": "^9.7.3",
     "chart.js": "^4.4.7",
+    "commander": "^11.1.0",
     "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "date-fns": "^2.30.0",
@@ -32,7 +34,7 @@
     "jspdf-autotable": "^3.8.4",
     "node-fetch": "^3.3.2",
     "pm2": "^5.4.3",
-    "puppeteer": "^23.11.1",
+    "ps-node": "^0.1.6",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-datepicker": "^7.6.0",
@@ -47,16 +49,19 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "set SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "clean": "node server/cli.mjs clean",
+    "start": "node server/cli.mjs start",
+    "restart": "node server/cli.mjs restart",
+    "dev": "node server/cli.mjs start",
     "start:server": "node server.js",
-    "dev": "concurrently \"npm run start\" \"npm run start:server\"",
     "build": "set SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false --transformIgnorePatterns \"node_modules/(?!@firebase)/\"",
     "eject": "react-scripts eject",
     "deploy": "npm run build && firebase deploy",
     "check-deps": "npx npm-check-updates",
-    "update-deps": "npx npm-check-updates -u && npm install"
+    "update-deps": "npx npm-check-updates -u && npm install",
+    "test:system": "node server/tests/fullSystemTest.mjs"
   },
   "eslintConfig": {
     "extends": [
@@ -99,7 +104,10 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
-    "http-proxy-middleware": "^3.0.3"
+    "cross-env": "^7.0.3",
+    "http-proxy-middleware": "^3.0.3",
+    "nanospinner": "^1.2.2"
   },
-  "proxy": "http://localhost:3001"
+  "proxy": "http://localhost:3001",
+  "type": "module"
 }
